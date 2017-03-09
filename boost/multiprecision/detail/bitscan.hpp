@@ -8,8 +8,8 @@
 #ifndef BOOST_MP_DETAIL_BITSCAN_HPP
 #define BOOST_MP_DETAIL_BITSCAN_HPP
 
-#if defined(BOOST_MSVC) && (defined(_M_IX86) || defined(_M_X64))
-#include <Intrin.h>
+#if (defined(BOOST_MSVC) || (defined(__clang__) && defined(__c2__)) || (defined(BOOST_INTEL) && defined(_MSC_VER))) && (defined(_M_IX86) || defined(_M_X64))
+#include <intrin.h>
 #endif
 
 namespace boost{ namespace multiprecision{ namespace detail{
@@ -38,7 +38,7 @@ inline unsigned find_msb(Unsigned mask, const mpl::int_<0>&)
    return --index;
 }
 
-#if defined(BOOST_MSVC) && (defined(_M_IX86) || defined(_M_X64))
+#if (defined(BOOST_MSVC) || (defined(__clang__) && defined(__c2__)) || (defined(BOOST_INTEL) && defined(_MSC_VER))) && (defined(_M_IX86) || defined(_M_X64))
 
 #pragma intrinsic(_BitScanForward,_BitScanReverse)
 
@@ -124,7 +124,7 @@ BOOST_FORCEINLINE unsigned find_lsb(unsigned long mask, mpl::int_<2> const&)
 {
    return __builtin_ctzl(mask);
 }
-BOOST_FORCEINLINE unsigned find_lsb(unsigned long long mask, mpl::int_<3> const&)
+BOOST_FORCEINLINE unsigned find_lsb(boost::ulong_long_type mask, mpl::int_<3> const&)
 {
    return __builtin_ctzll(mask);
 }
@@ -136,9 +136,9 @@ BOOST_FORCEINLINE unsigned find_msb(unsigned long mask, mpl::int_<2> const&)
 {
    return sizeof(unsigned long) * CHAR_BIT - 1 - __builtin_clzl(mask);
 }
-BOOST_FORCEINLINE unsigned find_msb(unsigned long long mask, mpl::int_<3> const&)
+BOOST_FORCEINLINE unsigned find_msb(boost::ulong_long_type mask, mpl::int_<3> const&)
 {
-   return sizeof(unsigned long long) * CHAR_BIT - 1 - __builtin_clzll(mask);
+   return sizeof(boost::ulong_long_type) * CHAR_BIT - 1 - __builtin_clzll(mask);
 }
 
 template <class Unsigned>
@@ -152,7 +152,7 @@ BOOST_FORCEINLINE unsigned find_lsb(Unsigned mask)
          sizeof(Unsigned) <= sizeof(unsigned long),
          mpl::int_<2>,
          typename mpl::if_c<
-            sizeof(Unsigned) <= sizeof(unsigned long long),
+            sizeof(Unsigned) <= sizeof(boost::ulong_long_type),
             mpl::int_<3>,
             mpl::int_<0>
          >::type
@@ -171,7 +171,7 @@ BOOST_FORCEINLINE unsigned find_msb(Unsigned mask)
          sizeof(Unsigned) <= sizeof(unsigned long),
          mpl::int_<2>,
          typename mpl::if_c<
-            sizeof(Unsigned) <= sizeof(unsigned long long),
+            sizeof(Unsigned) <= sizeof(boost::ulong_long_type),
             mpl::int_<3>,
             mpl::int_<0>
          >::type

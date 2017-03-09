@@ -13,11 +13,16 @@
 #ifndef BOOST_INTRUSIVE_DETAIL_TO_RAW_POINTER_HPP
 #define BOOST_INTRUSIVE_DETAIL_TO_RAW_POINTER_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <boost/intrusive/detail/config_begin.hpp>
+#include <boost/intrusive/detail/workaround.hpp>
 #include <boost/intrusive/detail/pointer_element.hpp>
 
 namespace boost {
@@ -25,11 +30,11 @@ namespace intrusive {
 namespace detail {
 
 template <class T>
-inline T* to_raw_pointer(T* p)
+BOOST_INTRUSIVE_FORCEINLINE T* to_raw_pointer(T* p)
 {  return p; }
 
 template <class Pointer>
-inline typename boost::intrusive::pointer_element<Pointer>::type*
+BOOST_INTRUSIVE_FORCEINLINE typename boost::intrusive::pointer_element<Pointer>::type*
 to_raw_pointer(const Pointer &p)
 {  return boost::intrusive::detail::to_raw_pointer(p.operator->());  }
 

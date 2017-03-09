@@ -14,10 +14,6 @@
 #ifndef BOOST_INTRUSIVE_LIST_HOOK_HPP
 #define BOOST_INTRUSIVE_LIST_HOOK_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
 
@@ -25,6 +21,11 @@
 #include <boost/intrusive/circular_list_algorithms.hpp>
 #include <boost/intrusive/options.hpp>
 #include <boost/intrusive/detail/generic_hook.hpp>
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 
 namespace boost {
 namespace intrusive {
@@ -49,7 +50,8 @@ struct make_list_base_hook
       >::type packed_options;
 
    typedef generic_hook
-   < circular_list_algorithms<list_node_traits<typename packed_options::void_pointer> >
+   < CircularListAlgorithms
+   , list_node_traits<typename packed_options::void_pointer>
    , typename packed_options::tag
    , packed_options::link_mode
    , ListBaseHookId
@@ -176,7 +178,8 @@ struct make_list_member_hook
       >::type packed_options;
 
    typedef generic_hook
-   < circular_list_algorithms<list_node_traits<typename packed_options::void_pointer> >
+   < CircularListAlgorithms
+   , list_node_traits<typename packed_options::void_pointer>
    , member_tag
    , packed_options::link_mode
    , NoBaseHookId

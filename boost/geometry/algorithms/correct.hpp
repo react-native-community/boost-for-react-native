@@ -23,8 +23,9 @@
 #include <boost/mpl/assert.hpp>
 #include <boost/range.hpp>
 #include <boost/type_traits/remove_reference.hpp>
-#include <boost/variant/static_visitor.hpp>
+
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/algorithms/detail/interior_iterator.hpp>
@@ -282,7 +283,7 @@ struct correct
 {
     static inline void apply(Geometry& geometry)
     {
-        concept::check<Geometry const>();
+        concepts::check<Geometry const>();
         dispatch::correct<Geometry>::apply(geometry);
     }
 };

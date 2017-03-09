@@ -1,6 +1,6 @@
 //  boost lockfree: copy_payload helper
 //
-//  Copyright (C) 2011 Tim Blechmann
+//  Copyright (C) 2011, 2016 Tim Blechmann
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -11,6 +11,11 @@
 
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_convertible.hpp>
+
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4512) // assignment operator could not be generated
+#endif
 
 namespace boost    {
 namespace lockfree {
@@ -70,5 +75,9 @@ struct consume_noop
 
 
 }}}
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #endif  /* BOOST_LOCKFREE_DETAIL_COPY_PAYLOAD_HPP_INCLUDED */

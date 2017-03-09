@@ -6,6 +6,7 @@
 //
 // Copyright (c) 2014 Glen Joseph Fernandes
 // glenfe at live dot com
+// Copyright (c) 2014 Riccardo Marcangelo
 //
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
@@ -227,6 +228,7 @@ public:
     void resize(size_type num_bits, bool value = false);
     void clear();
     void push_back(bool bit);
+    void pop_back();
     void append(Block block);
 
     template <typename BlockInputIterator>
@@ -303,6 +305,9 @@ public:
     size_type num_blocks() const BOOST_NOEXCEPT;
     size_type max_size() const BOOST_NOEXCEPT;
     bool empty() const BOOST_NOEXCEPT;
+    size_type capacity() const BOOST_NOEXCEPT;
+    void reserve(size_type num_bits);
+    void shrink_to_fit();
 
     bool is_subset_of(const dynamic_bitset& a) const;
     bool is_proper_subset_of(const dynamic_bitset& a) const;
@@ -745,6 +750,22 @@ push_back(bool bit)
   resize(sz + 1);
   set(sz, bit);
 }
+
+template <typename Block, typename Allocator>
+void dynamic_bitset<Block, Allocator>::
+pop_back()
+{
+  const size_type old_num_blocks = num_blocks();
+  const size_type required_blocks = calc_num_blocks(m_num_bits - 1);
+
+  if (required_blocks != old_num_blocks) {
+    m_bits.pop_back();
+  }
+
+  --m_num_bits;
+  m_zero_unused_bits();
+}
+
 
 template <typename Block, typename Allocator>
 void dynamic_bitset<Block, Allocator>::
@@ -1247,6 +1268,27 @@ template <typename Block, typename Allocator>
 inline bool dynamic_bitset<Block, Allocator>::empty() const BOOST_NOEXCEPT
 {
   return size() == 0;
+}
+
+template <typename Block, typename Allocator>
+inline typename dynamic_bitset<Block, Allocator>::size_type
+dynamic_bitset<Block, Allocator>::capacity() const BOOST_NOEXCEPT
+{
+    return m_bits.capacity() * bits_per_block;
+}
+
+template <typename Block, typename Allocator>
+inline void dynamic_bitset<Block, Allocator>::reserve(size_type num_bits)
+{
+    m_bits.reserve(calc_num_blocks(num_bits));
+}
+
+template <typename Block, typename Allocator>
+void dynamic_bitset<Block, Allocator>::shrink_to_fit()
+{
+    if (m_bits.size() < m_bits.capacity()) {
+      buffer_type(m_bits).swap(m_bits);
+    }
 }
 
 template <typename Block, typename Allocator>

@@ -19,7 +19,7 @@
 #endif
 
 
-#include <boost/geometry/algorithms/detail/signed_index_type.hpp>
+#include <boost/geometry/algorithms/detail/signed_size_type.hpp>
 
 
 namespace boost { namespace geometry
@@ -38,16 +38,18 @@ struct segment_identifier
         , multi_index(-1)
         , ring_index(-1)
         , segment_index(-1)
+        , piece_index(-1)
     {}
 
-    inline segment_identifier(signed_index_type src,
-                              signed_index_type mul,
-                              signed_index_type rin,
-                              signed_index_type seg)
+    inline segment_identifier(signed_size_type src,
+                              signed_size_type mul,
+                              signed_size_type rin,
+                              signed_size_type seg)
         : source_index(src)
         , multi_index(mul)
         , ring_index(rin)
         , segment_index(seg)
+        , piece_index(-1)
     {}
 
     inline bool operator<(segment_identifier const& other) const
@@ -81,10 +83,13 @@ struct segment_identifier
     }
 #endif
 
-    signed_index_type source_index;
-    signed_index_type multi_index;
-    signed_index_type ring_index;
-    signed_index_type segment_index;
+    signed_size_type source_index;
+    signed_size_type multi_index;
+    signed_size_type ring_index;
+    signed_size_type segment_index;
+
+    // For buffer - todo: move this to buffer-only
+    signed_size_type piece_index;
 };
 
 

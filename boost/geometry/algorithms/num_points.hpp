@@ -26,8 +26,8 @@
 
 #include <boost/range.hpp>
 
-#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/core/closure.hpp>
@@ -149,7 +149,7 @@ struct num_points
     static inline std::size_t apply(Geometry const& geometry,
                                     bool add_for_open)
     {
-        concept::check<Geometry const>();
+        concepts::check<Geometry const>();
 
         return add_for_open
             ? dispatch::num_points<Geometry, true>::apply(geometry)

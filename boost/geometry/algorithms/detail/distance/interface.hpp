@@ -198,7 +198,7 @@ struct distance<variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Geometry2>
           Geometry2 const& geometry2,
           Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(geometry2, strategy), geometry1);
+        return boost::apply_visitor(visitor<Strategy>(geometry2, strategy), geometry1);
     }
 };
 
@@ -253,20 +253,20 @@ struct distance<Geometry1, variant<BOOST_VARIANT_ENUM_PARAMS(T)> >
         const variant<BOOST_VARIANT_ENUM_PARAMS(T)>& geometry2,
         Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(geometry1, strategy), geometry2);
+        return boost::apply_visitor(visitor<Strategy>(geometry1, strategy), geometry2);
     }
 };
 
 
 template
 <
-    BOOST_VARIANT_ENUM_PARAMS(typename A),
-    BOOST_VARIANT_ENUM_PARAMS(typename B)
+    BOOST_VARIANT_ENUM_PARAMS(typename T1),
+    BOOST_VARIANT_ENUM_PARAMS(typename T2)
 >
 struct distance
     <
-        boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-        boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>
+        boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+        boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>
     >
 {
     template <typename Strategy>
@@ -274,8 +274,8 @@ struct distance
         <
             typename distance_result
                 <
-                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>,
+                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>,
                     Strategy
                 >::type
         >
@@ -304,15 +304,15 @@ struct distance
     template <typename Strategy>
     static inline typename distance_result
         <
-            boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-            boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>,
+            boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+            boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>,
             Strategy
         >::type
-    apply(boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)> const& geometry1,
-          boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)> const& geometry2,
+    apply(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)> const& geometry1,
+          boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)> const& geometry2,
           Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(strategy), geometry1, geometry2);
+        return boost::apply_visitor(visitor<Strategy>(strategy), geometry1, geometry2);
     }
 };
 
@@ -361,8 +361,8 @@ distance(Geometry1 const& geometry1,
          Geometry2 const& geometry2,
          Strategy const& strategy)
 {
-    concept::check<Geometry1 const>();
-    concept::check<Geometry2 const>();
+    concepts::check<Geometry1 const>();
+    concepts::check<Geometry2 const>();
 
     detail::throw_on_empty_input(geometry1);
     detail::throw_on_empty_input(geometry2);
@@ -392,10 +392,10 @@ inline typename default_distance_result<Geometry1, Geometry2>::type
 distance(Geometry1 const& geometry1,
          Geometry2 const& geometry2)
 {
-    concept::check<Geometry1 const>();
-    concept::check<Geometry2 const>();
+    concepts::check<Geometry1 const>();
+    concepts::check<Geometry2 const>();
 
-    return distance(geometry1, geometry2, default_strategy());
+    return geometry::distance(geometry1, geometry2, default_strategy());
 }
 
 }} // namespace boost::geometry

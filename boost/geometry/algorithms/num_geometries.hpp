@@ -23,8 +23,9 @@
 #include <cstddef>
 
 #include <boost/range.hpp>
-#include <boost/variant/static_visitor.hpp>
+
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/algorithms/not_implemented.hpp>
@@ -89,7 +90,7 @@ struct num_geometries
 {
     static inline std::size_t apply(Geometry const& geometry)
     {
-        concept::check<Geometry const>();
+        concepts::check<Geometry const>();
 
         return dispatch::num_geometries<Geometry>::apply(geometry);
     }

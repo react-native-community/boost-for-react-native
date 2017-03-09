@@ -211,10 +211,10 @@
 
     // Specify the underlying name of the internal 128-bit floating-point type definition.
     namespace boost { namespace math { namespace cstdfloat { namespace detail {
-    #if defined(BOOST_INTEL)
-      typedef _Quad      float_internal128_t;
-    #elif defined(__GNUC__)
-      typedef __float128 float_internal128_t;
+    #if defined(__GNUC__)
+      typedef __float128      float_internal128_t;
+    #elif defined(BOOST_INTEL)
+      typedef _Quad           float_internal128_t;
     #else
       #error "Sorry, the compiler is neither GCC, nor Intel, I don't know how to configure <boost/cstdfloat.hpp>."
     #endif
@@ -355,6 +355,15 @@
       #undef BOOST_CSTDFLOAT_FLOAT_32_MIN
       #undef BOOST_CSTDFLOAT_FLOAT_32_MAX
     #endif
+
+#if (defined(__SGI_STL_PORT) || defined(_STLPORT_VERSION)) && defined(__SUNPRO_CC)
+#undef BOOST_CSTDFLOAT_HAS_FLOAT80_NATIVE_TYPE
+#define BOOST_CSTDFLOAT_HAS_FLOAT80_NATIVE_TYPE 0
+#undef BOOST_CSTDFLOAT_HAS_FLOAT128_NATIVE_TYPE
+#define BOOST_CSTDFLOAT_HAS_FLOAT128_NATIVE_TYPE 0
+#undef BOOST_CSTDFLOAT_MAXIMUM_AVAILABLE_WIDTH
+#define BOOST_CSTDFLOAT_MAXIMUM_AVAILABLE_WIDTH 64
+#endif
 
     #if(BOOST_CSTDFLOAT_HAS_FLOAT64_NATIVE_TYPE == 1)
       typedef BOOST_CSTDFLOAT_FLOAT64_NATIVE_TYPE float64_t;

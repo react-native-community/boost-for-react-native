@@ -15,6 +15,10 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#   include <utility> // for std::forward, std::move
+#endif
+
 #ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4521)
@@ -33,11 +37,11 @@ struct storage
     storage(storage&& other) : data(other.data) {}
     storage& operator=(const storage& other) { data = other.data; return *this; }
     template<class T>
-    storage(T&& arg) : data(new typename remove_cv<
+    explicit storage(T&& arg) : data(new typename remove_cv<
         typename remove_reference<T>::type>::type(std::forward<T>(arg))) {}
 #else
     template<class T>
-    storage(const T& arg) : data(new T(arg)) {}
+    explicit storage(const T& arg) : data(new T(arg)) {}
 #endif
     void* data;
 };

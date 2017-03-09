@@ -30,10 +30,6 @@
 #ifndef BOOST_INTRUSIVE_SPLAYTREE_ALGORITHMS_HPP
 #define BOOST_INTRUSIVE_SPLAYTREE_ALGORITHMS_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
 #include <boost/intrusive/detail/assert.hpp>
@@ -42,6 +38,10 @@
 #include <boost/intrusive/bstree_algorithms.hpp>
 
 #include <cstddef>
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
 
 namespace boost {
 namespace intrusive {
@@ -86,7 +86,7 @@ struct splaydown_assemble_and_fix_header
       //    left(t), right(t) := right(null), left(null);
       //end assemble;
       {  //    left(r), right(l) := right(t), left(t);
-         
+
          node_ptr const old_t_left  = NodeTraits::get_left(t_);
          node_ptr const old_t_right = NodeTraits::get_right(t_);
          NodeTraits::set_right(l_, old_t_left);
@@ -222,7 +222,7 @@ class splaytree_algorithms
 
    //! @copydoc ::boost::intrusive::bstree_algorithms::init_header(const node_ptr&)
    static void init_header(const node_ptr & header);
-   
+
    #endif   //#ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
 
    //! @copydoc ::boost::intrusive::bstree_algorithms::erase(const node_ptr&,const node_ptr&)
@@ -233,22 +233,49 @@ class splaytree_algorithms
       if(NodeTraits::get_left(z)){
          splay_up(bstree_algo::prev_node(z), header);
       }
-      /*
+
       //possibility 2
-      if(NodeTraits::get_left(z)){
-         node_ptr l = NodeTraits::get_left(z);
-         splay_up(l, header);
-      }*/
-      /*
-      if(NodeTraits::get_left(z)){
-         node_ptr l = bstree_algo::prev_node(z);
-         splay_up_impl(l, z);
-      }*/
-      /*
+      //if(NodeTraits::get_left(z)){
+      //   node_ptr l = NodeTraits::get_left(z);
+      //   splay_up(l, header);
+      //}
+
+      //if(NodeTraits::get_left(z)){
+      //   node_ptr l = bstree_algo::prev_node(z);
+      //   splay_up_impl(l, z);
+      //}
+
       //possibility 4
-      splay_up(z, header);
-      */
+      //splay_up(z, header);
+
       bstree_algo::erase(header, z);
+   }
+
+   //! @copydoc ::boost::intrusive::bstree_algorithms::transfer_unique
+   template<class NodePtrCompare>
+   static bool transfer_unique
+      (const node_ptr & header1, NodePtrCompare comp, const node_ptr &header2, const node_ptr & z)
+   {
+      typename bstree_algo::insert_commit_data commit_data;
+      bool const transferable = bstree_algo::insert_unique_check(header1, z, comp, commit_data).second;
+      if(transferable){
+         erase(header2, z);
+         bstree_algo::insert_commit(header1, z, commit_data);
+         splay_up(z, header1);
+      }
+      return transferable;
+   }
+
+   //! @copydoc ::boost::intrusive::bstree_algorithms::transfer_equal
+   template<class NodePtrCompare>
+   static void transfer_equal
+      (const node_ptr & header1, NodePtrCompare comp, const node_ptr &header2, const node_ptr & z)
+   {
+      insert_commit_data commit_data;
+      splay_down(header1, z, comp);
+      bstree_algo::insert_equal_upper_bound_check(header1, z, comp, commit_data);
+      erase(header2, z);
+      bstree_algo::insert_commit(header1, z, commit_data);
    }
 
    #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED

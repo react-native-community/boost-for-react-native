@@ -62,6 +62,23 @@
 #  define BOOST_NO_CXX11_STD_ALIGN
 #  define BOOST_NO_CXX11_ADDRESSOF
 
+#if defined(__has_include)
+#if !__has_include(<shared_mutex>)
+#  define BOOST_NO_CXX14_HDR_SHARED_MUTEX
+#elif __cplusplus < 201402
+#  define BOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+#else
+#  define BOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+
+// C++14 features
+#  define BOOST_NO_CXX14_STD_EXCHANGE
+
+// C++17 features
+#  define BOOST_NO_CXX17_STD_APPLY
+#  define BOOST_NO_CXX17_STD_INVOKE
+
 //
 // Intrinsic type_traits support.
 // The SGI STL has it's own __type_traits class, which
@@ -71,5 +88,3 @@
 #define BOOST_HAS_SGI_TYPE_TRAITS
 
 #define BOOST_STDLIB "Comeau standard library " BOOST_STRINGIZE(__LIBCOMO_VERSION__)
-
-

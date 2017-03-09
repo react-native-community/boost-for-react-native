@@ -13,9 +13,15 @@
 #ifndef BOOST_INTRUSIVE_DETAIL_SIZE_HOLDER_HPP
 #define BOOST_INTRUSIVE_DETAIL_SIZE_HOLDER_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
+
+#include <boost/intrusive/detail/workaround.hpp>
 
 namespace boost {
 namespace intrusive {
@@ -27,23 +33,26 @@ struct size_holder
    static const bool constant_time_size = ConstantSize;
    typedef SizeType  size_type;
 
-   SizeType get_size() const
+   BOOST_INTRUSIVE_FORCEINLINE SizeType get_size() const
    {  return size_;  }
 
-   void set_size(SizeType size)
+   BOOST_INTRUSIVE_FORCEINLINE void set_size(SizeType size)
    {  size_ = size; }
 
-   void decrement()
+   BOOST_INTRUSIVE_FORCEINLINE void decrement()
    {  --size_; }
 
-   void increment()
+   BOOST_INTRUSIVE_FORCEINLINE void increment()
    {  ++size_; }
 
-   void increase(SizeType n)
+   BOOST_INTRUSIVE_FORCEINLINE void increase(SizeType n)
    {  size_ += n; }
 
-   void decrease(SizeType n)
+   BOOST_INTRUSIVE_FORCEINLINE void decrease(SizeType n)
    {  size_ -= n; }
+
+   BOOST_INTRUSIVE_FORCEINLINE void swap(size_holder &other)
+   {  SizeType tmp(size_); size_ = other.size_; other.size_ = tmp; }
 
    SizeType size_;
 };
@@ -54,23 +63,25 @@ struct size_holder<false, SizeType, Tag>
    static const bool constant_time_size = false;
    typedef SizeType  size_type;
 
-   size_type get_size() const
+   BOOST_INTRUSIVE_FORCEINLINE size_type get_size() const
    {  return 0;  }
 
-   void set_size(size_type)
+   BOOST_INTRUSIVE_FORCEINLINE void set_size(size_type)
    {}
 
-   void decrement()
+   BOOST_INTRUSIVE_FORCEINLINE void decrement()
    {}
 
-   void increment()
+   BOOST_INTRUSIVE_FORCEINLINE void increment()
    {}
 
-   void increase(SizeType)
+   BOOST_INTRUSIVE_FORCEINLINE void increase(SizeType)
    {}
 
-   void decrease(SizeType)
+   BOOST_INTRUSIVE_FORCEINLINE void decrease(SizeType)
    {}
+
+   BOOST_INTRUSIVE_FORCEINLINE void swap(size_holder){}
 };
 
 }  //namespace detail{

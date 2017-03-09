@@ -14,10 +14,6 @@
 #ifndef BOOST_INTRUSIVE_AVLTREE_ALGORITHMS_HPP
 #define BOOST_INTRUSIVE_AVLTREE_ALGORITHMS_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
 
@@ -28,6 +24,11 @@
 #include <boost/intrusive/detail/ebo_functor_holder.hpp>
 #include <boost/intrusive/bstree_algorithms.hpp>
 
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
+
 namespace boost {
 namespace intrusive {
 
@@ -35,7 +36,8 @@ namespace intrusive {
 
 template<class NodeTraits, class F>
 struct avltree_node_cloner
-   :  private detail::ebo_functor_holder<F>
+   //Use public inheritance to avoid MSVC bugs with closures
+   :  public detail::ebo_functor_holder<F>
 {
    typedef typename NodeTraits::node_ptr  node_ptr;
    typedef detail::ebo_functor_holder<F>  base_t;
@@ -45,6 +47,13 @@ struct avltree_node_cloner
    {}
 
    node_ptr operator()(const node_ptr & p)
+   {
+      node_ptr n = base_t::get()(p);
+      NodeTraits::set_balance(n, NodeTraits::get_balance(p));
+      return n;
+   }
+
+   node_ptr operator()(const node_ptr & p) const
    {
       node_ptr n = base_t::get()(p);
       NodeTraits::set_balance(n, NodeTraits::get_balance(p));
@@ -168,7 +177,7 @@ class avltree_algorithms
 
    //! @copydoc ::boost::intrusive::bstree_algorithms::swap_tree
    static void swap_tree(const node_ptr & header1, const node_ptr & header2);
-   
+
    #endif   //#ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
 
    //! @copydoc ::boost::intrusive::bstree_algorithms::swap_nodes(const node_ptr&,const node_ptr&)
@@ -260,12 +269,33 @@ class avltree_algorithms
    {
       typename bstree_algo::data_for_rebalance info;
       bstree_algo::erase(header, z, info);
-      if(info.y != z){
-         NodeTraits::set_balance(info.y, NodeTraits::get_balance(z));
-      }
-      //Rebalance avltree
-      rebalance_after_erasure(header, info.x, info.x_parent);
+      rebalance_after_erasure(header, z, info);
       return z;
+   }
+
+   //! @copydoc ::boost::intrusive::bstree_algorithms::transfer_unique
+   template<class NodePtrCompare>
+   static bool transfer_unique
+      (const node_ptr & header1, NodePtrCompare comp, const node_ptr &header2, const node_ptr & z)
+   {
+      typename bstree_algo::data_for_rebalance info;
+      bool const transferred = bstree_algo::transfer_unique(header1, comp, header2, z, info);
+      if(transferred){
+         rebalance_after_erasure(header2, z, info);
+         rebalance_after_insertion(header1, z);
+      }
+      return transferred;
+   }
+
+   //! @copydoc ::boost::intrusive::bstree_algorithms::transfer_equal
+   template<class NodePtrCompare>
+   static void transfer_equal
+      (const node_ptr & header1, NodePtrCompare comp, const node_ptr &header2, const node_ptr & z)
+   {
+      typename bstree_algo::data_for_rebalance info;
+      bstree_algo::transfer_equal(header1, comp, header2, z, info);
+      rebalance_after_erasure(header2, z, info);
+      rebalance_after_insertion(header1, z);
    }
 
    //! @copydoc ::boost::intrusive::bstree_algorithms::clone(const const_node_ptr&,const node_ptr&,Cloner,Disposer)
@@ -452,7 +482,17 @@ class avltree_algorithms
       return true;
    }
 
-   static void rebalance_after_erasure(const node_ptr & header, node_ptr x, node_ptr x_parent)
+   static void rebalance_after_erasure
+      ( const node_ptr & header, const node_ptr &z, const typename bstree_algo::data_for_rebalance &info)
+   {
+      if(info.y != z){
+         NodeTraits::set_balance(info.y, NodeTraits::get_balance(z));
+      }
+      //Rebalance avltree
+      rebalance_after_erasure_restore_invariants(header, info.x, info.x_parent);
+   }
+
+   static void rebalance_after_erasure_restore_invariants(const node_ptr & header, node_ptr x, node_ptr x_parent)
    {
       for ( node_ptr root = NodeTraits::get_parent(header)
           ; x != root
@@ -604,7 +644,7 @@ class avltree_algorithms
       const node_ptr c = NodeTraits::get_right(a_oldleft);
       bstree_algo::rotate_left_no_parent_fix(a_oldleft, c);
       //No need to link c with a [NodeTraits::set_parent(c, a) + NodeTraits::set_left(a, c)]
-      //as c is not root and another rotation is coming 
+      //as c is not root and another rotation is coming
       bstree_algo::rotate_right(a, c, NodeTraits::get_parent(a), hdr);
       left_right_balancing(a, a_oldleft, c);
       return c;

@@ -14,11 +14,16 @@
 #ifndef BOOST_INTRUSIVE_SLIST_NODE_HPP
 #define BOOST_INTRUSIVE_SLIST_NODE_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <boost/intrusive/detail/config_begin.hpp>
+#include <boost/intrusive/detail/workaround.hpp>
 #include <boost/intrusive/pointer_rebind.hpp>
 
 namespace boost {
@@ -41,13 +46,13 @@ struct slist_node_traits
    typedef typename node::node_ptr  node_ptr;
    typedef typename pointer_rebind<VoidPointer, const node>::type    const_node_ptr;
 
-   static node_ptr get_next(const const_node_ptr & n)
+   BOOST_INTRUSIVE_FORCEINLINE static node_ptr get_next(const const_node_ptr & n)
    {  return n->next_;  }
 
-   static node_ptr get_next(const node_ptr & n)
+   BOOST_INTRUSIVE_FORCEINLINE static node_ptr get_next(const node_ptr & n)
    {  return n->next_;  }
 
-   static void set_next(const node_ptr & n, const node_ptr & next)
+   BOOST_INTRUSIVE_FORCEINLINE static void set_next(const node_ptr & n, const node_ptr & next)
    {  n->next_ = next;  }
 };
 

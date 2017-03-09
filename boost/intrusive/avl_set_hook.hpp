@@ -13,10 +13,6 @@
 #ifndef BOOST_INTRUSIVE_AVL_SET_HOOK_HPP
 #define BOOST_INTRUSIVE_AVL_SET_HOOK_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
 
@@ -24,6 +20,10 @@
 #include <boost/intrusive/avltree_algorithms.hpp>
 #include <boost/intrusive/options.hpp>
 #include <boost/intrusive/detail/generic_hook.hpp>
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
 
 namespace boost {
 namespace intrusive {
@@ -47,7 +47,8 @@ struct make_avl_set_base_hook
       ::type packed_options;
 
    typedef generic_hook
-   < avltree_algorithms<avltree_node_traits<typename packed_options::void_pointer, packed_options::optimize_size> >
+   < AvlTreeAlgorithms
+   , avltree_node_traits<typename packed_options::void_pointer, packed_options::optimize_size>
    , typename packed_options::tag
    , packed_options::link_mode
    , AvlTreeBaseHookId
@@ -177,7 +178,8 @@ struct make_avl_set_member_hook
       ::type packed_options;
 
    typedef generic_hook
-   < avltree_algorithms<avltree_node_traits<typename packed_options::void_pointer, packed_options::optimize_size> >
+   < AvlTreeAlgorithms
+   , avltree_node_traits<typename packed_options::void_pointer, packed_options::optimize_size>
    , member_tag
    , packed_options::link_mode
    , NoBaseHookId

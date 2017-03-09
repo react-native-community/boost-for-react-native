@@ -13,9 +13,15 @@
 #ifndef BOOST_INTRUSIVE_DETAIL_EXCEPTION_DISPOSER_HPP
 #define BOOST_INTRUSIVE_DETAIL_EXCEPTION_DISPOSER_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
+
+#include <boost/intrusive/detail/workaround.hpp>
 
 namespace boost {
 namespace intrusive {
@@ -35,7 +41,7 @@ class exception_disposer
       :  cont_(&cont), disp_(disp)
    {}
 
-   void release()
+   BOOST_INTRUSIVE_FORCEINLINE void release()
    {  cont_ = 0;  }
 
    ~exception_disposer()
@@ -63,7 +69,7 @@ class exception_array_disposer
       :  cont_(&cont), disp_(disp), constructed_(constructed)
    {}
 
-   void release()
+   BOOST_INTRUSIVE_FORCEINLINE void release()
    {  cont_ = 0;  }
 
    ~exception_array_disposer()

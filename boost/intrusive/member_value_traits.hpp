@@ -13,16 +13,17 @@
 #ifndef BOOST_INTRUSIVE_MEMBER_VALUE_TRAITS_HPP
 #define BOOST_INTRUSIVE_MEMBER_VALUE_TRAITS_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
 
 #include <boost/intrusive/link_mode.hpp>
 #include <boost/intrusive/detail/parent_from_member.hpp>
+#include <boost/intrusive/detail/to_raw_pointer.hpp> 
 #include <boost/intrusive/pointer_traits.hpp>
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
 
 namespace boost {
 namespace intrusive {
@@ -56,19 +57,19 @@ struct member_value_traits
    typedef const value_type &                                           const_reference;
    static const link_mode_type link_mode = LinkMode;
 
-   static node_ptr to_node_ptr(reference value)
+   BOOST_INTRUSIVE_FORCEINLINE static node_ptr to_node_ptr(reference value)
    {  return pointer_traits<node_ptr>::pointer_to(value.*PtrToMember);   }
 
-   static const_node_ptr to_node_ptr(const_reference value)
+   BOOST_INTRUSIVE_FORCEINLINE static const_node_ptr to_node_ptr(const_reference value)
    {  return pointer_traits<const_node_ptr>::pointer_to(value.*PtrToMember);   }
 
-   static pointer to_value_ptr(const node_ptr &n)
+   BOOST_INTRUSIVE_FORCEINLINE static pointer to_value_ptr(const node_ptr &n)
    {
       return pointer_traits<pointer>::pointer_to(*detail::parent_from_member<value_type, node>
          (boost::intrusive::detail::to_raw_pointer(n), PtrToMember));
    }
 
-   static const_pointer to_value_ptr(const const_node_ptr &n)
+   BOOST_INTRUSIVE_FORCEINLINE static const_pointer to_value_ptr(const const_node_ptr &n)
    {
       return pointer_traits<const_pointer>::pointer_to(*detail::parent_from_member<value_type, node>
          (boost::intrusive::detail::to_raw_pointer(n), PtrToMember));

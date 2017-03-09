@@ -20,6 +20,7 @@
 #include <boost/geometry/algorithms/detail/point_is_spike_or_equal.hpp>
 #include <boost/geometry/algorithms/detail/equals/point_point.hpp>
 
+#include <boost/geometry/util/condition.hpp>
 #include <boost/geometry/util/range.hpp>
 
 
@@ -42,7 +43,7 @@ inline bool points_equal_or_close(Point1 const& point1,
         return true;
     }
 
-    if (! RobustPolicy::enabled)
+    if (BOOST_GEOMETRY_CONDITION(! RobustPolicy::enabled))
     {
         return false;
     }
@@ -71,7 +72,7 @@ inline void append_no_dups_or_spikes(Range& range, Point const& point,
         << geometry::get<0>(point) << ", " << geometry::get<1>(point) << ")"
         << std::endl;
 #endif
-    // The code below thies condition checks all spikes/dups
+    // The code below this condition checks all spikes/dups
     // for geometries >= 3 points.
     // So we have to check the first potential duplicate differently
     if (boost::size(range) == 1
@@ -127,7 +128,7 @@ inline void clean_closing_dups_and_spikes(Range& range,
         iterator_type first = boost::begin(range);
         iterator_type second = first + 1;
         iterator_type ultimate = boost::end(range) - 1;
-        if (closed)
+        if (BOOST_GEOMETRY_CONDITION(closed))
         {
             ultimate--;
         }
@@ -137,7 +138,7 @@ inline void clean_closing_dups_and_spikes(Range& range,
         if (point_is_spike_or_equal(*second, *ultimate, *first, robust_policy))
         {
             range::erase(range, first);
-            if (closed)
+            if (BOOST_GEOMETRY_CONDITION(closed))
             {
                 // Remove closing last point
                 range::resize(range, boost::size(range) - 1);

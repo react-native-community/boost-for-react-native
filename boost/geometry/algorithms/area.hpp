@@ -18,8 +18,9 @@
 #include <boost/mpl/if.hpp>
 #include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
-#include <boost/variant/static_visitor.hpp>
+
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/core/closure.hpp>
@@ -81,7 +82,7 @@ struct ring_area
     static inline typename Strategy::return_type
     apply(Ring const& ring, Strategy const& strategy)
     {
-        BOOST_CONCEPT_ASSERT( (geometry::concept::AreaStrategy<Strategy>) );
+        BOOST_CONCEPT_ASSERT( (geometry::concepts::AreaStrategy<Strategy>) );
         assert_dimension<Ring, 2>();
 
         // Ignore warning (because using static method sometimes) on strategy
@@ -265,7 +266,7 @@ and Geographic as well.
 template <typename Geometry>
 inline typename default_area_result<Geometry>::type area(Geometry const& geometry)
 {
-    concept::check<Geometry const>();
+    concepts::check<Geometry const>();
 
     // TODO put this into a resolve_strategy stage
     //      (and take the return type from resolve_variant)
@@ -309,7 +310,7 @@ template <typename Geometry, typename Strategy>
 inline typename Strategy::return_type area(
         Geometry const& geometry, Strategy const& strategy)
 {
-    concept::check<Geometry const>();
+    concepts::check<Geometry const>();
 
     // detail::throw_on_empty_input(geometry);
 

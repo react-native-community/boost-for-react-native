@@ -13,7 +13,11 @@
 #ifndef BOOST_INTRUSIVE_DETAIL_ALGO_TYPE_HPP
 #define BOOST_INTRUSIVE_DETAIL_ALGO_TYPE_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -31,7 +35,10 @@ enum algo_types
    AvlTreeAlgorithms,
    SgTreeAlgorithms,
    SplayTreeAlgorithms,
-   TreapAlgorithms
+   TreapAlgorithms,
+   UnorderedAlgorithms,
+   UnorderedCircularSlistAlgorithms,
+   AnyAlgorithm
 };
 
 template<algo_types AlgoType, class NodeTraits>

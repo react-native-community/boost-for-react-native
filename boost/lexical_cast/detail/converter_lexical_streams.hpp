@@ -1,6 +1,6 @@
 // Copyright Kevlin Henney, 2000-2005.
 // Copyright Alexander Nasonov, 2006-2010.
-// Copyright Antony Polukhin, 2011-2014.
+// Copyright Antony Polukhin, 2011-2016.
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -13,7 +13,7 @@
 //        Beman Dawes, Dave Abrahams, Daryle Walker, Peter Dimov,
 //        Alexander Nasonov, Antony Polukhin, Justin Viiret, Michael Hofmann,
 //        Cheng Yang, Matthew Bradbury, David W. Birdsall, Pavel Korzh and other Boosters
-// when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2014
+// when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2014, Nowember 2016
 
 #ifndef BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_STREAMS_HPP
 #define BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_STREAMS_HPP
@@ -34,7 +34,6 @@
 #include <cstdio>
 #include <boost/limits.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/type_traits/ice.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/detail/workaround.hpp>
@@ -62,7 +61,6 @@
 #include <boost/lexical_cast/detail/lcast_char_constants.hpp>
 #include <boost/lexical_cast/detail/lcast_unsigned_converters.hpp>
 #include <boost/lexical_cast/detail/inf_nan.hpp>
-#include <boost/lexical_cast/detail/lcast_float_converters.hpp>
 
 #include <istream>
 
@@ -109,23 +107,26 @@ namespace boost {
 
     namespace detail
     {
-        struct do_not_construct_out_stream_t{};
-        
+        struct do_not_construct_out_buffer_t{};
+        struct do_not_construct_out_stream_t{
+            do_not_construct_out_stream_t(do_not_construct_out_buffer_t*){}
+        };
+
         template <class CharT, class Traits>
         struct out_stream_helper_trait {
 #if defined(BOOST_NO_STRINGSTREAM)
-            typedef std::ostrstream                                 out_stream_t;
-            typedef void                                            buffer_t;
+            typedef std::ostream                                                    out_stream_t;
+            typedef basic_unlockedbuf<std::strstreambuf, char>                      stringbuffer_t;
 #elif defined(BOOST_NO_STD_LOCALE)
-            typedef std::ostringstream                              out_stream_t;
-            typedef basic_unlockedbuf<std::streambuf, char>         buffer_t;
+            typedef std::ostream                                                    out_stream_t;
+            typedef basic_unlockedbuf<std::stringbuf, char>                         stringbuffer_t;
+            typedef basic_unlockedbuf<std::streambuf, char>                         buffer_t;
 #else
-            typedef std::basic_ostringstream<CharT, Traits> 
-                out_stream_t;
-            typedef basic_unlockedbuf<std::basic_streambuf<CharT, Traits>, CharT>  
-                buffer_t;
+            typedef std::basic_ostream<CharT, Traits>                               out_stream_t;
+            typedef basic_unlockedbuf<std::basic_stringbuf<CharT, Traits>, CharT>   stringbuffer_t;
+            typedef basic_unlockedbuf<std::basic_streambuf<CharT, Traits>, CharT>   buffer_t;
 #endif
-        };   
+        };
     }
 
     namespace detail // optimized stream wrappers
@@ -136,19 +137,19 @@ namespace boost {
                 , std::size_t CharacterBufferSize
                 >
         class lexical_istream_limited_src: boost::noncopyable {
-            typedef BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::buffer_t
-                buffer_t;
-
-            typedef BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::out_stream_t
-                out_stream_t;
-    
             typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_c<
                 RequiresStringbuffer,
-                out_stream_t,
+                BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::out_stream_t,
                 do_not_construct_out_stream_t
             >::type deduced_out_stream_t;
 
-            // A string representation of Source is written to `buffer`.
+            typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_c<
+                RequiresStringbuffer,
+                BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::stringbuffer_t,
+                do_not_construct_out_buffer_t
+            >::type deduced_out_buffer_t;
+
+            deduced_out_buffer_t out_buffer;
             deduced_out_stream_t out_stream;
             CharT   buffer[CharacterBufferSize];
 
@@ -159,7 +160,9 @@ namespace boost {
 
         public:
             lexical_istream_limited_src() BOOST_NOEXCEPT
-              : start(buffer)
+              : out_buffer()
+              , out_stream(&out_buffer)
+              , start(buffer)
               , finish(buffer + CharacterBufferSize)
             {}
     
@@ -172,10 +175,6 @@ namespace boost {
             }
 
         private:
-            // Undefined:
-            lexical_istream_limited_src(lexical_istream_limited_src const&);
-            void operator=(lexical_istream_limited_src const&);
-
 /************************************ HELPER FUNCTIONS FOR OPERATORS << ( ... ) ********************************/
             bool shl_char(CharT ch) BOOST_NOEXCEPT {
                 Traits::assign(buffer[0], ch);
@@ -214,7 +213,7 @@ namespace boost {
                     "Use boost::locale instead" );
                 return shl_input_streamable(str);
             }
-            
+
             bool shl_char_array_limited(CharT const* str, std::size_t max_size) BOOST_NOEXCEPT {
                 start = str;
                 finish = std::find(start, start + max_size, Traits::to_char_type(0));
@@ -234,8 +233,8 @@ namespace boost {
                 try {
 #endif
                 bool const result = !(out_stream << input).fail();
-                const buffer_t* const p = static_cast<buffer_t*>(
-                    static_cast<std::basic_streambuf<CharT, Traits>*>(out_stream.rdbuf())
+                const deduced_out_buffer_t* const p = static_cast<deduced_out_buffer_t*>(
+                    out_stream.rdbuf()
                 );
                 start = p->pbase();
                 finish = p->pptr();
@@ -469,7 +468,7 @@ namespace boost {
 
             template <std::size_t N>
             bool operator<<(boost::array<const CharT, N> const& input) BOOST_NOEXCEPT { 
-                return shl_char_array_limited(input.begin(), N); 
+                return shl_char_array_limited(input.data(), N);
             }
 
             template <std::size_t N>
@@ -575,14 +574,11 @@ namespace boost {
                     "support such conversions. Try updating it."
                 );
 #endif
-                typedef BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::buffer_t
-                    buffer_t;
 
 #if defined(BOOST_NO_STRINGSTREAM)
                 std::istrstream stream(start, finish - start);
 #else
-
-                buffer_t buf;
+                BOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::buffer_t buf;
                 // Usually `istream` and `basic_istream` do not modify 
                 // content of buffer; `buffer_t` assures that this is true
                 buf.setbuf(const_cast<CharT*>(start), finish - start);
@@ -699,7 +695,7 @@ namespace boost {
             template <class C, std::size_t N>
             bool operator>>(std::array<C, N>& output) BOOST_NOEXCEPT { 
                 BOOST_STATIC_ASSERT_MSG(
-                    (sizeof(boost::array<C, N>) == sizeof(boost::array<C, N>)),
+                    (sizeof(std::array<C, N>) == sizeof(boost::array<C, N>)),
                     "std::array<C, N> and boost::array<C, N> must have exactly the same layout."
                 );
                 return ((*this) >> reinterpret_cast<boost::array<C, N>& >(output));
@@ -739,12 +735,10 @@ namespace boost {
                 return true;
             }
 
-            bool operator>>(float& output) { return lcast_ret_float<Traits>(output,start,finish); }
-
         private:
             // Not optimised converter
             template <class T>
-            bool float_types_converter_internal(T& output, int /*tag*/) {
+            bool float_types_converter_internal(T& output) {
                 if (parse_inf_nan(start, finish, output)) return true;
                 bool const return_value = shr_using_base_class(output);
 
@@ -770,36 +764,10 @@ namespace boost {
                 return return_value;
             }
 
-            // Optimised converter
-            bool float_types_converter_internal(double& output, char /*tag*/) {
-                return lcast_ret_float<Traits>(output, start, finish);
-            }
         public:
-
-            bool operator>>(double& output) {
-                /*
-                 * Some compilers implement long double as double. In that case these types have
-                 * same size, same precision, same max and min values... And it means,
-                 * that current implementation of lcast_ret_float cannot be used for type
-                 * double, because it will give a big precision loss.
-                 * */
-                boost::mpl::if_c<
-#if (defined(BOOST_HAS_LONG_LONG) || defined(BOOST_HAS_MS_INT64)) && !defined(BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
-                    boost::type_traits::ice_eq< sizeof(double), sizeof(long double) >::value,
-#else
-                     1,
-#endif
-                    int,
-                    char
-                >::type tag = 0;
-
-                return float_types_converter_internal(output, tag);
-            }
-
-            bool operator>>(long double& output) {
-                int tag = 0;
-                return float_types_converter_internal(output, tag);
-            }
+            bool operator>>(float& output) { return float_types_converter_internal(output); }
+            bool operator>>(double& output) { return float_types_converter_internal(output); }
+            bool operator>>(long double& output) { return float_types_converter_internal(output); }
 
             // Generic istream-based algorithm.
             // lcast_streambuf_for_target<InputStreamable>::value is true.

@@ -2,7 +2,7 @@
 //
 // R-tree inserting visitor implementation
 //
-// Copyright (c) 2011-2013 Adam Wulkiewicz, Lodz, Poland.
+// Copyright (c) 2011-2015 Adam Wulkiewicz, Lodz, Poland.
 //
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -10,6 +10,11 @@
 
 #ifndef BOOST_GEOMETRY_INDEX_DETAIL_RTREE_VISITORS_INSERT_HPP
 #define BOOST_GEOMETRY_INDEX_DETAIL_RTREE_VISITORS_INSERT_HPP
+
+#include <boost/type_traits/is_same.hpp>
+
+#include <boost/geometry/algorithms/detail/expand_by_epsilon.hpp>
+#include <boost/geometry/util/condition.hpp>
 
 #include <boost/geometry/index/detail/algorithms/content.hpp>
 
@@ -115,7 +120,7 @@ protected:
     typedef typename rtree::internal_node<Value, parameters_type, Box, Allocators, typename Options::node_tag>::type internal_node;
     typedef typename rtree::leaf<Value, parameters_type, Box, Allocators, typename Options::node_tag>::type leaf;
 
-    typedef rtree::node_auto_ptr<Value, Options, Translator, Box, Allocators> node_auto_ptr;
+    typedef rtree::subtree_destroyer<Value, Options, Translator, Box, Allocators> subtree_destroyer;
 
 public:
     typedef index::detail::varray<
@@ -133,8 +138,8 @@ public:
     {
         // TODO - consider creating nodes always with sufficient memory allocated
 
-        // create additional node, use auto ptr for automatic destruction on exception
-        node_auto_ptr second_node(rtree::create_node<Allocators, Node>::apply(allocators), allocators);     // MAY THROW, STRONG (N: alloc)
+        // create additional node, use auto destroyer for automatic destruction on exception
+        subtree_destroyer second_node(rtree::create_node<Allocators, Node>::apply(allocators), allocators);     // MAY THROW, STRONG (N: alloc)
         // create reference to the newly created node
         Node & n2 = rtree::get<Node>(*second_node);
 
@@ -232,7 +237,7 @@ protected:
     typedef typename rtree::internal_node<Value, parameters_type, Box, Allocators, typename Options::node_tag>::type internal_node;
     typedef typename rtree::leaf<Value, parameters_type, Box, Allocators, typename Options::node_tag>::type leaf;
 
-    typedef rtree::node_auto_ptr<Value, Options, Translator, Box, Allocators> node_auto_ptr;
+    typedef rtree::subtree_destroyer<Value, Options, Translator, Box, Allocators> subtree_destroyer;
     typedef typename Allocators::node_pointer node_pointer;
     typedef typename Allocators::size_type size_type;
 
@@ -262,6 +267,29 @@ protected:
         BOOST_GEOMETRY_INDEX_ASSERT(0 != m_root_node, "there is no root node");
         // TODO
         // assert - check if Box is correct
+
+        // When a value is inserted, during the tree traversal bounds of nodes
+        // on a path from the root to a leaf must be expanded. So prepare
+        // a bounding object at the beginning to not do it later for each node.
+        // NOTE: This is actually only needed because conditionally the bounding
+        //       object may be expanded below. Otherwise the indexable could be
+        //       directly used instead
+        index::detail::bounds(rtree::element_indexable(m_element, m_translator), m_element_bounds);
+
+#ifdef BOOST_GEOMETRY_INDEX_EXPERIMENTAL_ENLARGE_BY_EPSILON
+        // Enlarge it in case if it's not bounding geometry type.
+        // It's because Points and Segments are compared WRT machine epsilon
+        // This ensures that leafs bounds correspond to the stored elements
+        if (BOOST_GEOMETRY_CONDITION((
+                boost::is_same<Element, Value>::value
+             && ! index::detail::is_bounding_geometry
+                    <
+                        typename indexable_type<Translator>::type
+                    >::value )) )
+        {
+            geometry::detail::expand_by_epsilon(m_element_bounds);
+        }
+#endif
     }
 
     template <typename Visitor>
@@ -274,7 +302,8 @@ protected:
         // expand the node to contain value
         geometry::expand(
             rtree::elements(n)[choosen_node_index].first,
-            rtree::element_indexable(m_element, m_translator));
+            m_element_bounds
+            /*rtree::element_indexable(m_element, m_translator)*/);
 
         // next traversing step
         traverse_apply_visitor(visitor, n, choosen_node_index);                                                 // MAY THROW (V, E: alloc, copy, N:alloc)
@@ -340,7 +369,23 @@ protected:
         // Implement template <node_tag> struct node_element_type or something like that
 
         // for exception safety
-        node_auto_ptr additional_node_ptr(additional_nodes[0].second, m_allocators);
+        subtree_destroyer additional_node_ptr(additional_nodes[0].second, m_allocators);
+
+#ifdef BOOST_GEOMETRY_INDEX_EXPERIMENTAL_ENLARGE_BY_EPSILON
+        // Enlarge bounds of a leaf node.
+        // It's because Points and Segments are compared WRT machine epsilon
+        // This ensures that leafs' bounds correspond to the stored elements.
+        if (BOOST_GEOMETRY_CONDITION((
+                boost::is_same<Node, leaf>::value
+             && ! index::detail::is_bounding_geometry
+                    <
+                        typename indexable_type<Translator>::type
+                    >::value )))
+        {
+            geometry::detail::expand_by_epsilon(n_box);
+            geometry::detail::expand_by_epsilon(additional_nodes[0].first);
+        }
+#endif
 
         // node is not the root - just add the new node
         if ( !m_traverse_data.current_is_root() )
@@ -356,7 +401,7 @@ protected:
             BOOST_GEOMETRY_INDEX_ASSERT(&n == &rtree::get<Node>(*m_root_node), "node should be the root");
 
             // create new root and add nodes
-            node_auto_ptr new_root(rtree::create_node<Allocators, internal_node>::apply(m_allocators), m_allocators); // MAY THROW, STRONG (N:alloc)
+            subtree_destroyer new_root(rtree::create_node<Allocators, internal_node>::apply(m_allocators), m_allocators); // MAY THROW, STRONG (N:alloc)
 
             BOOST_TRY
             {
@@ -365,7 +410,7 @@ protected:
             }
             BOOST_CATCH(...)
             {
-                // clear new root to not delete in the ~node_auto_ptr() potentially stored old root node
+                // clear new root to not delete in the ~subtree_destroyer() potentially stored old root node
                 rtree::elements(rtree::get<internal_node>(*new_root)).clear();
                 BOOST_RETHROW                                                                                           // RETHROW
             }
@@ -383,6 +428,7 @@ protected:
     // TODO: awulkiew - implement dispatchable split::apply to enable additional nodes creation
 
     Element const& m_element;
+    Box m_element_bounds;
     parameters_type const& m_parameters;
     Translator const& m_translator;
     size_type const m_relative_level;

@@ -10,19 +10,23 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_INTRUSIVE_DETAIL_ITERATOR_HPP
-#define BOOST_INTRUSIVE_DETAIL_ITERATOR_HPP
+#ifndef BOOST_INTRUSIVE_DETAIL_REVERSE_ITERATOR_HPP
+#define BOOST_INTRUSIVE_DETAIL_REVERSE_ITERATOR_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <boost/intrusive/detail/config_begin.hpp>
-#include <boost/intrusive/detail/iiterator.hpp>
+#include <boost/intrusive/detail/iterator.hpp>
+#include <boost/intrusive/detail/mpl.hpp>
 
 namespace boost {
 namespace intrusive {
-namespace detail {
 
 template<class It>
 class reverse_iterator
@@ -39,35 +43,63 @@ class reverse_iterator
 
    reverse_iterator()
       : m_current()  //Value initialization to achieve "null iterators" (N3644)
-      {}
+   {}
 
    explicit reverse_iterator(It r)
       : m_current(r)
    {}
 
-   template<class OtherIt>
-   reverse_iterator(const reverse_iterator<OtherIt>& r)
+   reverse_iterator(const reverse_iterator& r)
       : m_current(r.base())
    {}
+
+   template<class OtherIt>
+   reverse_iterator( const reverse_iterator<OtherIt>& r
+                   , typename boost::intrusive::detail::enable_if_convertible<OtherIt, It>::type* =0
+                   )
+      : m_current(r.base())
+   {}
+
+   reverse_iterator & operator=( const reverse_iterator& r)
+   {  m_current = r.base();   return *this;  }
+
+   template<class OtherIt>
+   typename boost::intrusive::detail::enable_if_convertible<OtherIt, It, reverse_iterator &>::type
+         operator=( const reverse_iterator<OtherIt>& r)
+   {  m_current = r.base();   return *this;  }
 
    It base() const
    {  return m_current;  }
 
    reference operator*() const
-   {  It temp(m_current);   --temp; return *temp; }
+   {
+      It temp(m_current);
+      --temp;
+      reference r = *temp;
+      return r;
+   }
 
    pointer operator->() const
-   {  It temp(m_current);   --temp; return temp.operator->(); }
+   {
+      It temp(m_current);
+      --temp;
+      return iterator_arrow_result(temp);
+   }
 
    reference operator[](difference_type off) const
-   {  return this->m_current[-off];  }
+   {
+      return this->m_current[-off - 1];
+   }
 
    reverse_iterator& operator++()
-   {  --m_current;   return *this;   }
+   {
+      --m_current;
+      return *this;
+   }
 
    reverse_iterator operator++(int)
    {
-      reverse_iterator temp = *this;
+      reverse_iterator temp((*this));
       --m_current;
       return temp;
    }
@@ -80,7 +112,7 @@ class reverse_iterator
 
    reverse_iterator operator--(int)
    {
-      reverse_iterator temp(*this);
+      reverse_iterator temp((*this));
       ++m_current;
       return temp;
    }
@@ -106,22 +138,17 @@ class reverse_iterator
    reverse_iterator& operator+=(difference_type off)
    {  m_current -= off; return *this;  }
 
-   friend reverse_iterator operator+(const reverse_iterator & l, difference_type off)
-   {
-      reverse_iterator tmp(l.m_current);
-      tmp.m_current -= off;
-      return tmp;
-   }
-
    reverse_iterator& operator-=(difference_type off)
    {  m_current += off; return *this;  }
 
-   friend reverse_iterator operator-(const reverse_iterator & l, difference_type off)
-   {
-      reverse_iterator tmp(l.m_current);
-      tmp.m_current += off;
-      return tmp;
-   }
+   friend reverse_iterator operator+(reverse_iterator l, difference_type off)
+   {  return (l += off);  }
+
+   friend reverse_iterator operator+(difference_type off, reverse_iterator r)
+   {  return (r += off);   }
+
+   friend reverse_iterator operator-(reverse_iterator l, difference_type off)
+   {  return (l-= off);  }
 
    friend difference_type operator-(const reverse_iterator& l, const reverse_iterator& r)
    {  return r.m_current - l.m_current;  }
@@ -130,10 +157,9 @@ class reverse_iterator
    It m_current;   // the wrapped iterator
 };
 
-} //namespace detail
-} //namespace intrusive
-} //namespace boost
+} //namespace intrusive {
+} //namespace boost {
 
 #include <boost/intrusive/detail/config_end.hpp>
 
-#endif //BOOST_INTRUSIVE_DETAIL_ITERATOR_HPP
+#endif //BOOST_INTRUSIVE_DETAIL_REVERSE_ITERATOR_HPP

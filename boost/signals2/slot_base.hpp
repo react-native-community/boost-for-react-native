@@ -17,7 +17,6 @@
 #include <boost/signals2/detail/foreign_ptr.hpp>
 #include <boost/signals2/expired_slot.hpp>
 #include <boost/signals2/signal_base.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/variant.hpp>
 #include <vector>
@@ -68,6 +67,7 @@ namespace boost
       typedef std::vector<detail::void_shared_ptr_variant> locked_container_type;
 
       const tracked_container_type& tracked_objects() const {return _tracked_objects;}
+    #ifndef BOOST_NO_EXCEPTIONS
       locked_container_type lock() const
       {
         locked_container_type locked_objects;
@@ -77,11 +77,12 @@ namespace boost
           locked_objects.push_back(apply_visitor(detail::lock_weak_ptr_visitor(), *it));
           if(apply_visitor(detail::expired_weak_ptr_visitor(), *it))
           {
-            boost::throw_exception(expired_slot());
+            throw expired_slot();
           }
         }
         return locked_objects;
       }
+    #endif
       bool expired() const
       {
         tracked_container_type::const_iterator it;

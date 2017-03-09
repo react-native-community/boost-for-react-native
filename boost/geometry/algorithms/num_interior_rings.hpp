@@ -24,8 +24,8 @@
 
 #include <boost/range.hpp>
 
-#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/core/tag.hpp>
@@ -88,7 +88,7 @@ struct num_interior_rings
 {
     static inline std::size_t apply(Geometry const& geometry)
     {
-        concept::check<Geometry const>();
+        concepts::check<Geometry const>();
 
         return dispatch::num_interior_rings<Geometry>::apply(geometry);
     }

@@ -13,10 +13,6 @@
 #ifndef BOOST_INTRUSIVE_BS_SET_HOOK_HPP
 #define BOOST_INTRUSIVE_BS_SET_HOOK_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
 
@@ -24,6 +20,10 @@
 #include <boost/intrusive/bstree_algorithms.hpp>
 #include <boost/intrusive/options.hpp>
 #include <boost/intrusive/detail/generic_hook.hpp>
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
 
 namespace boost {
 namespace intrusive {
@@ -47,7 +47,8 @@ struct make_bs_set_base_hook
    ::type packed_options;
 
    typedef generic_hook
-   < bstree_algorithms<tree_node_traits<typename packed_options::void_pointer> >
+   < BsTreeAlgorithms
+   , tree_node_traits<typename packed_options::void_pointer>
    , typename packed_options::tag
    , packed_options::link_mode
    , BsTreeBaseHookId
@@ -176,7 +177,8 @@ struct make_bs_set_member_hook
    ::type packed_options;
 
    typedef generic_hook
-   < bstree_algorithms<tree_node_traits<typename packed_options::void_pointer> >
+   < BsTreeAlgorithms
+   , tree_node_traits<typename packed_options::void_pointer>
    , member_tag
    , packed_options::link_mode
    , NoBaseHookId
