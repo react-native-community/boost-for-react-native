@@ -14,7 +14,7 @@ React Native build tools (Gradle) expect specific folder structure.
 Run this command to get a .tar.gz file:
 
 ```
-tar -cvzf boost_1_57_0.tar.gz boost_1_57_0/
+tar -cvzf boost_1_63_0.tar.gz boost_1_63_0/
 ```
 
 Then drag&drop the tar.gz file to the releases page.
