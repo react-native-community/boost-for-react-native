@@ -198,7 +198,7 @@ register_parameters( rt::parameters_store& store )
         rt::description = "Enables/disables floating point exceptions traps.",
         rt::env_var = "BOOST_TEST_DETECT_FP_EXCEPTIONS",
         rt::help = "Option " + DETECT_FP_EXCEPT + " enables/disables hardware traps for the floating "
-                   "point exceptions (if supported on your platfrom)."
+                   "point exceptions (if supported on your platform)."
     ));
 
     detect_fp_except.add_cla_id( "--", DETECT_FP_EXCEPT, "=", true );
