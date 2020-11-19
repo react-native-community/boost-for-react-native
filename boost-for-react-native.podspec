@@ -9,7 +9,7 @@ Pod::Spec.new do |spec|
                   :tag => 'v1.63.0-0' }
 
   # Pinning to the same version as React.podspec.
-  spec.platforms = { :ios => '8.0', :tvos => '9.2' }
+  spec.platforms = { :ios => '10.0', :tvos => '9.2' }
   spec.requires_arc = false
 
   spec.module_name = 'boost'
