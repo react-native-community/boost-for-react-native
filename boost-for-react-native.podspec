@@ -7,6 +7,7 @@ Pod::Spec.new do |spec|
   spec.authors = 'Rene Rivera'
   spec.source = { :git => 'https://github.com/react-native-community/boost-for-react-native.git',
                   :tag => 'v1.63.0-1' }
+  spec.compiler_flags = '-Wno-documentation'
 
   # Pinning to the same version as React.podspec.
   spec.platforms = { :ios => '11.0', :tvos => '11.0' }
