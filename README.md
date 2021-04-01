@@ -4,6 +4,8 @@ This is a copy of [Boost](http://www.boost.org/) that is used to build React Nat
 
 You probably don't want to directly use this repository. Its sole purpose is to distribute the Boost code for building React Native.
 
+This library does not necessarily follow semver. It follows Boost's versioning plus a number in the prerelease identifier position. React Native declares the exact version of this library it depends on instead of using semver ranges.
+
 ## Upgrading Boost
 
 First, download a new version of Boost, e.g.: http://www.boost.org/users/history/version_1_63_0.html
