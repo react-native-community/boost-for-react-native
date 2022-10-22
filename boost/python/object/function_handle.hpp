@@ -31,7 +31,7 @@ inline handle<> function_handle(F const& f, Signature)
     );
 }
 
-// Just like make_function, but returns a handle<> intead. Same
+// Just like make_function, but returns a handle<> instead. Same
 // reasoning as above.
 template <class F>
 handle<> make_function_handle(F f)

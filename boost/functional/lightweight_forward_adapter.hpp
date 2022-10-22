@@ -150,7 +150,7 @@ namespace boost
         { };
 
         // When operator() doesn't have any parameters, it can't
-        // be templatized and can't use SFINAE, so intead use class
+        // be templatized and can't use SFINAE, so instead use class
         // template parameter SFINAE to decide whether to instantiate it.
 
         template <typename T, typename R = void>
