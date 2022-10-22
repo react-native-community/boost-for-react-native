@@ -144,8 +144,8 @@ namespace boost
             : boost::result_of< BOOST_DEDUCED_TYPENAME c<Self>::t() >
         { };
 
-        // WHen operator()() doesn't have any parameters, it can't
-        // be templatized and can't use SFINAE, so intead use class
+        // When operator()() doesn't have any parameters, it can't
+        // be templatized and can't use SFINAE, so instead use class
         // template parameter SFINAE to decide whether to instantiate it.
 
         template <typename T, typename R = void>
