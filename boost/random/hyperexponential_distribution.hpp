@@ -19,7 +19,7 @@
 
 
 #include <boost/config.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/core/cmath.hpp>
 #include <boost/random/detail/operators.hpp>
 #include <boost/random/detail/vector_io.hpp>
 #include <boost/random/discrete_distribution.hpp>
@@ -78,7 +78,7 @@ bool check_probabilities(std::vector<RealT> const& probabilities)
     {
         if (probabilities[i] < 0
             || probabilities[i] > 1
-            || !(boost::math::isfinite)(probabilities[i]))
+            || !(boost::core::isfinite)(probabilities[i]))
         {
             return false;
         }
@@ -109,7 +109,7 @@ bool check_rates(std::vector<RealT> const& rates)
     for (std::size_t i = 0; i < n; ++i)
     {
         if (rates[i] <= 0
-            || !(boost::math::isfinite)(rates[i]))
+            || !(boost::core::isfinite)(rates[i]))
         {
             return false;
         }
@@ -490,14 +490,10 @@ class hyperexponential_distribution
                 rates.clear();
             }
 
-            bool fail = false;
-
             // Adjust vector sizes (if needed)
             if (param.probs_.size() != param.rates_.size()
                 || param.probs_.size() == 0)
             {
-                fail = true;
-
                 const std::size_t np = param.probs_.size();
                 const std::size_t nr = param.rates_.size();
 
@@ -520,13 +516,6 @@ class hyperexponential_distribution
             // NOTE: this cannot be done earlier since the probability vector
             //       can be changed due to size conformance
             hyperexp_detail::normalize(param.probs_);
-
-            // Set the error state in the underlying stream in case of invalid input
-            if (fail)
-            {
-                // This throws an exception if ios_base::exception(failbit) is enabled
-                is.setstate(std::ios_base::failbit);
-            }
 
             //post: vector size conformance
             assert(param.probs_.size() == param.rates_.size());
