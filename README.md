@@ -8,7 +8,7 @@ This library does not necessarily follow semver. It follows Boost's versioning p
 
 ## Upgrading Boost
 
-First, download a new version of Boost, e.g.: http://www.boost.org/users/history/version_1_63_0.html
+First, download a new version of Boost, e.g.: http://www.boost.org/users/history/version_1_84_0.html
 
 Then create a dummy commit and a git tag so you can create a new release.
 
